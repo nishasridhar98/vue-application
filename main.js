@@ -54,6 +54,24 @@ Vue.component('product',{
 		<li v-for="size in sizes">{{size}}</li>
 	</ul>
 
+
+	<product-review @review-submited="addReview"> </product-review>
+
+	<div>
+
+		
+
+        <h2>Reviews</h2>
+        <p v-if="!reviews.length">There are no reviews yet.</p>
+        <ul>
+          <li v-for="(review,index) in reviews" :key="index">
+          <p>{{ review.name }}</p>
+          <p>Rating: {{ review.rating }}</p>
+          <p>{{ review.review }}</p>
+          </li>
+        </ul>
+       </div>
+
 	<button v-on:click="addToCart"
 			:disabled="!inStock" 
 			:class="{ disabledButton: !inStock}"> 
@@ -105,6 +123,7 @@ Vue.component('product',{
 		],
 
 		sizes: ['S','M','L','XL'],
+		reviews: [],
 
 
 	}
@@ -126,6 +145,9 @@ Vue.component('product',{
 				updateProduct(index){
 					this.selectedVariant = index
 					console.log(index)
+				},
+				addReview(productReview){
+					this.reviews.push(productReview)
 				}
 
 		},
@@ -171,6 +193,98 @@ Vue.component('product-details',{
 
 	
 })
+
+Vue.component('product-review',{
+	template: `
+
+	<div>
+	<form class="review-form" @submit.prevent="onSubmit">
+	<!-- .prevent-> event modifier, which is used to prevent the submit event from reloading our page
+	v-on = @ -->
+
+    <p v-if="errors.length">
+      <b>Please correct the following error(s):</b>
+      <ul>
+        <li v-for="error in errors">{{ error }}</li>
+      </ul>
+   	 	</p>
+
+      <p>
+        <label for="name">Name:</label>
+        <input id="name" v-model="name" placeholder="name">
+        <!-- v-model  directive gives us this two-way binding -->
+      </p>
+      
+      <p>
+        <label for="review">Review:</label>      
+        <textarea id="review" v-model="review"></textarea>
+      </p>
+      
+      <p>
+        <label for="rating">Rating:</label>
+        <select id="rating" v-model.number="rating">
+          <option>5</option>
+          <option>4</option>
+          <option>3</option>
+          <option>2</option>
+          <option>1</option>
+        </select>
+      </p>
+          
+          <p>
+          	<p> Would you recommend this product?</p>
+          	<label> Yes
+          	<input type="radio"  value="yes" v-model="recommend"> </label>
+  			<label>No
+  			<input type="radio"  value="no" v-model="recommend"> 
+          	</label>
+          </p>
+      <p>
+        <input type="submit" value="Submit">  
+      </p>    
+    
+    </form>
+
+	</div>
+	`,
+
+	data() {
+		return {
+		name: null,
+		review: null,
+		rating: null,
+		errors:[],
+		recommend:null
+		
+		}
+	},
+	methods:{
+		onSubmit(){
+			if(this.name && this.review && this.rating && this.recommend) {
+			let productReview ={
+				name: this.name,
+				review: this.review,
+				rating: this.rating,
+				recommend: this.recommend
+
+			}
+			//send the product-review to product component
+			this.$emit('review-submited',productReview)
+			this.name =null
+			this.review=null
+			this.rating=null
+			this.recommend=null
+		}
+		else {
+        if(!this.name) this.errors.push("Name required.")
+        if(!this.review) this.errors.push("Review required.")
+        if(!this.rating) this.errors.push("Rating required.")
+        if(!this.recommend) this.errors.push("Recommendation required")
+      }//custom form validation 
+	}
+	}
+})
+
 
 var app = new Vue({  //create a Vue instance called app
 		el : '#myapp', //el-> element property called myapp wic connects to the div wid id myapp
